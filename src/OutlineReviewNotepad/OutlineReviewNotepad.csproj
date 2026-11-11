@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>OutlineReviewNotepad</AssemblyName>
+    <RootNamespace>OutlineReviewNotepad</RootNamespace>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Keep in step with V in web\index.html; publish.ps1 checks. -->
+    <Version>2.0.0</Version>
+    <Product>Outline Review Notepad</Product>
+    <Description>Outline notepad with review comments, replies and edit history</Description>
+    <Copyright>Copyright (c) 2026 DontGoToCollege</Copyright>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+
+  <!-- The whole web app is embedded and served from a private virtual host (see WebAssets.cs). -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\web\**\*" LogicalName="web/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="smoke.js" LogicalName="smoke.js" />
+    <Resource Include="app.ico" />
+  </ItemGroup>
+
+</Project>
