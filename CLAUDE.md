@@ -58,7 +58,3 @@ Build and check:
 - `--smoke` self-check: make a document, add rows and a comment, save, reopen, merge a reviewer copy, import a 2.x
   HTML fixture, export text; write PASS/FAIL to `Scriber-Data\smoke.txt`. Run it on a Debug build first.
 - Test behind the owner's windows only: UI Automation and PrintWindow, never real input (see the global rules).
-
-## Still to do from the rename
-- The project folder is still `Projects\OutlineReviewNotepad`; rename it to `Projects\Scriber` from a chat that
-  isn't running inside it, then `git remote -v` should point at `DontGoToCollege/Scriber`.
