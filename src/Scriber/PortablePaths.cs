@@ -13,8 +13,11 @@ public static class PortablePaths
         Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
 
     public static string DataDir { get; } = ResolveDataDir();
-    public static string WebViewDir => Path.Combine(DataDir, "WebView2");
+    public static string SettingsFile => Path.Combine(DataDir, "settings.json");
+    /// <summary>2.x kept window placement here; read once if settings.json doesn't exist yet.</summary>
     public static string WindowFile => Path.Combine(DataDir, "window.json");
+    /// <summary>Autosaves of new documents that haven't been saved as a file yet.</summary>
+    public static string UnsavedDir => Path.Combine(DataDir, "Unsaved");
     public static string LogFile => Path.Combine(DataDir, "app.log");
 
     static string ResolveDataDir()

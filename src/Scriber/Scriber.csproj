@@ -10,8 +10,8 @@
     <RootNamespace>Scriber</RootNamespace>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <!-- Keep in step with V in web\index.html; publish.ps1 checks. -->
-    <Version>2.1.0</Version>
+    <!-- The only place the version is set; the app reads it from here. -->
+    <Version>3.0.0</Version>
     <Product>Scriber</Product>
     <Description>Outline notepad with review comments, replies and edit history</Description>
     <Copyright>Copyright (c) 2026 DontGoToCollege</Copyright>
@@ -20,13 +20,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
-  </ItemGroup>
-
-  <!-- The whole web app is embedded and served from a private virtual host (see WebAssets.cs). -->
-  <ItemGroup>
-    <EmbeddedResource Include="..\..\web\**\*" LogicalName="web/%(RecursiveDir)%(Filename)%(Extension)" />
-    <EmbeddedResource Include="smoke.js" LogicalName="smoke.js" />
     <Resource Include="app.ico" />
   </ItemGroup>
 

@@ -1,8 +1,8 @@
 # Publishes Scriber as a self-contained, single-file x64 executable.
 # Usage:  .\publish.ps1            -> Scriber.exe (and Versions\Archive\Scriber-<version>.exe)
 #         .\publish.ps1 -Run       -> publish and launch
-# Refuses a version that's already in Versions\Archive: raise <Version> in the csproj and V in
-# web\index.html first. The build must pass its own self-check (--smoke) before it is kept.
+# Refuses a version that's already in Versions\Archive: raise <Version> in the csproj first (the only
+# place the version is set). The build must pass its own self-check (--smoke) before it is kept.
 # If Scriber is running, it is closed first and started again on the new version.
 param([switch]$Run)
 
@@ -16,8 +16,6 @@ $top  = Join-Path $root "$name.exe"
 $version = ([xml](Get-Content $proj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
 $archive = Join-Path $root "Versions\Archive\$name-$version.exe"
 if (Test-Path $archive) { throw "Version $version is already archived. Raise <Version> in the csproj, then publish again." }
-$web = Get-Content (Join-Path $root "web\index.html") -Raw
-if ($web -notmatch "const V='$([regex]::Escape($version))'") { throw "web\index.html does not say V='$version'. Keep it in step with the csproj." }
 
 # Ask a running copy to close; never kill it.
 $running = @(Get-Process $name -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $top })

@@ -1,14 +1,15 @@
 # Scriber
 
 Outline notepad with review comments (rows, indents, rich text, comments with replies, resolve and edit history).
-Called Outline Review Notepad up to 2.0.0. 1.5.7 was a single HTML file; 2.x is a WPF + WebView2 shell around
-`web\index.html`. **3.0.0 is a native rewrite with no HTML anywhere** (decided with the owner on 2026-11-20).
+Called Outline Review Notepad up to 2.0.0. 1.5.7 was a single HTML file; 2.x was a WPF + WebView2 shell around a web
+page. **3.0.0 is a native WPF rewrite with no HTML anywhere** (decided with the owner on 2026-11-20, built the same day).
+Code map: `Model.cs` (document, file format, import, merge), `Html.cs` (reads old rows and pasted HTML), `MainWindow.*`
+(files, undo, toolbar, keys), `Outline.cs` (rows: one RichTextBox per row), `Review.cs`, `Export.cs`, `Smoke.cs`.
 
-## 3.0.0 plan (native rewrite)
+## 3.0 design (native rewrite)
 
 Decisions the owner made:
 - Native WPF, .NET 8, self-contained single-file `Scriber.exe` like the owner's other apps. No WebView2, no web page.
-  Delete `web\` and the WebView2 package once the native version reaches feature parity.
 - **Document files**, like Word: each outline is a `.scriber` file (JSON) you open and save, with a recent-files list
   and autosave. The file is also what gets sent to reviewers, who need Scriber.exe to comment.
 - People without Scriber get a **read-only export**: plain text, and PDF through the Windows print dialog
@@ -53,8 +54,12 @@ Bugs found in 2.x that the rewrite must not repeat:
 - Show a clear warning when a save fails (2.x quietly showed "Ready to save/share").
 
 Build and check:
-- Keep `publish.ps1`'s shape (archive refusal, smoke before keep, close and restart a running copy); drop its web
-  check. Raise the version in the csproj only.
-- `--smoke` self-check: make a document, add rows and a comment, save, reopen, merge a reviewer copy, import a 2.x
-  HTML fixture, export text; write PASS/FAIL to `Scriber-Data\smoke.txt`. Run it on a Debug build first.
-- Test behind the owner's windows only: UI Automation and PrintWindow, never real input (see the global rules).
+- `publish.ps1` keeps the archive refusal, smoke before keep, and close-and-restart of a running copy. The version is
+  set in the csproj only (`AppInfo.Version` reads it).
+- `--smoke` drives the real code without showing the window: rows, formatting, undo, comments, save, reopen, merge,
+  2.x HTML import, paste parsing (plain, web, Word), export, find. It writes PASS/FAIL to `Scriber-Data\smoke.txt` and
+  draws the window to `smoke.png`. Run it on a Debug build first.
+- Look at the UI through `smoke.png`, not screenshots: PrintWindow on an off-screen WPF window captures only a blank
+  client area (even with software rendering). Never real input (see the global rules).
+- WPF gotchas met here: a row's TextDecorations can't be cancelled by a child run, so row underline is set per run;
+  the RichTextBox's own scroller eats the mouse wheel (forwarded to the outline); its undo is off (document undo).

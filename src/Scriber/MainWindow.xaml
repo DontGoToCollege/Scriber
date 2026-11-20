@@ -1,13 +1,257 @@
 <Window x:Class="Scriber.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
-        Icon="app.ico"
-        Width="1400" Height="900" MinWidth="800" MinHeight="520"
-        WindowStartupLocation="CenterScreen">
-    <Grid>
-        <wv2:WebView2 x:Name="Web" />
-        <TextBlock x:Name="Status" HorizontalAlignment="Center" VerticalAlignment="Center"
-                   TextAlignment="Center" FontFamily="Segoe UI" FontSize="14" Text="loading..." />
+        Icon="app.ico" Title="Scriber"
+        Width="1400" Height="900" MinWidth="760" MinHeight="480"
+        WindowStartupLocation="CenterScreen"
+        Background="#F4F7FB" Foreground="#172033" FontFamily="Segoe UI" FontSize="13"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+    <Window.Resources>
+        <ControlTemplate x:Key="Flat" TargetType="ButtonBase">
+            <Grid>
+                <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="7" />
+                <Border x:Name="hover" Background="#0F172A" Opacity="0" CornerRadius="7" />
+                <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalAlignment="Center" />
+            </Grid>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="hover" Property="Opacity" Value="0.07" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.35" />
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+        <Style x:Key="Tool" TargetType="Button">
+            <Setter Property="Template" Value="{StaticResource Flat}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="#334155" />
+            <Setter Property="Padding" Value="6,0" />
+            <Setter Property="MinWidth" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="Btn" TargetType="Button">
+            <Setter Property="Template" Value="{StaticResource Flat}" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DBE2EA" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#172033" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="Primary" TargetType="Button" BasedOn="{StaticResource Btn}">
+            <Setter Property="Background" Value="#2563EB" />
+            <Setter Property="BorderBrush" Value="#2563EB" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style x:Key="Small" TargetType="Button" BasedOn="{StaticResource Btn}">
+            <Setter Property="Padding" Value="9,3" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+        </Style>
+        <Style x:Key="SmallPrimary" TargetType="Button" BasedOn="{StaticResource Primary}">
+            <Setter Property="Padding" Value="9,3" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+        </Style>
+        <Style x:Key="Sep" TargetType="Border">
+            <Setter Property="Width" Value="1" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Margin" Value="6,0" />
+            <Setter Property="Background" Value="#DBE2EA" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="6,5" />
+            <Setter Property="BorderBrush" Value="#DBE2EA" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="2,0" />
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Margin" Value="6,0" />
+        </Style>
+    </Window.Resources>
+
+    <Grid ToolTipService.InitialShowDelay="900">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Top bar -->
+        <Border Background="White" BorderBrush="#DBE2EA" BorderThickness="0,0,0,1" Padding="14,10">
+            <DockPanel LastChildFill="True">
+                <Button x:Name="FileButton" DockPanel.Dock="Left" Style="{StaticResource Btn}" Content="File ▾" Margin="0,0,10,0"
+                        ToolTip="New, open, save, merge a review copy, export" />
+                <Button x:Name="SaveButton" DockPanel.Dock="Right" Style="{StaticResource Primary}" Content="⇩ Save" Margin="8,0,0,0"
+                        ToolTip="Save (Ctrl+S)" />
+                <Button x:Name="ReviewToggle" DockPanel.Dock="Right" Style="{StaticResource Btn}" Content="◉ Review" Margin="8,0,0,0"
+                        ToolTip="Show or hide Review (Esc)" />
+                <TextBlock x:Name="Status" DockPanel.Dock="Right" VerticalAlignment="Center" Foreground="#64748B" Margin="10,0,4,0" />
+                <TextBox x:Name="TitleBox" FontSize="20" FontWeight="SemiBold" BorderThickness="0" Padding="4,2"
+                         Background="Transparent" ToolTip="Outline title" />
+            </DockPanel>
+        </Border>
+
+        <!-- Toolbar -->
+        <Border Grid.Row="1" Background="White" BorderBrush="#DBE2EA" BorderThickness="0,0,0,1" Padding="10,4">
+            <WrapPanel x:Name="Toolbar" VerticalAlignment="Center">
+                <Button x:Name="UndoButton" Style="{StaticResource Tool}" Content="↶" ToolTip="Undo (Ctrl+Z)" />
+                <Button x:Name="RedoButton" Style="{StaticResource Tool}" Content="↷" ToolTip="Redo (Ctrl+Y)" />
+                <Border Style="{StaticResource Sep}" />
+                <Button x:Name="BoldButton" Style="{StaticResource Tool}" FontWeight="Bold" Content="B" ToolTip="Bold (Ctrl+B)" />
+                <Button x:Name="ItalicButton" Style="{StaticResource Tool}" FontStyle="Italic" Content="I" ToolTip="Italic (Ctrl+I)" />
+                <Button x:Name="UnderlineButton" Style="{StaticResource Tool}" ToolTip="Underline (Ctrl+U)">
+                    <TextBlock Text="U" TextDecorations="Underline" />
+                </Button>
+                <Border Style="{StaticResource Sep}" />
+                <ComboBox x:Name="FontBox" Width="140" ToolTip="Font" />
+                <ComboBox x:Name="SizeBox" Width="60" ToolTip="Font size" />
+                <Border BorderBrush="#DBE2EA" BorderThickness="1" CornerRadius="7" Margin="4,0" VerticalAlignment="Center" ToolTip="Text color">
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="ColorApply" Style="{StaticResource Tool}" MinWidth="30" Height="28" ToolTip="Apply the last text color">
+                            <StackPanel>
+                                <TextBlock Text="A" FontWeight="Bold" HorizontalAlignment="Center" FontSize="13" />
+                                <Border x:Name="ColorSwatch" Width="18" Height="4" Background="Black" />
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="ColorMenu" Style="{StaticResource Tool}" MinWidth="16" Height="28" Padding="2,0" FontSize="10" Content="▾"
+                                ToolTip="Choose a text color" />
+                    </StackPanel>
+                </Border>
+                <Popup x:Name="ColorPopup" PlacementTarget="{Binding ElementName=ColorMenu}" Placement="Bottom" StaysOpen="False"
+                       AllowsTransparency="True">
+                    <Border Background="White" BorderBrush="#DBE2EA" BorderThickness="1" CornerRadius="8" Padding="6">
+                        <UniformGrid x:Name="ColorGrid" Columns="6" />
+                    </Border>
+                </Popup>
+                <Border Style="{StaticResource Sep}" />
+                <Button x:Name="BulletButton" Style="{StaticResource Tool}" Content="•" FontSize="20" ToolTip="Bullet row" />
+                <Button x:Name="NumberButton" Style="{StaticResource Tool}" Content="1." ToolTip="Numbered row" />
+                <Button x:Name="OutdentButton" Style="{StaticResource Tool}" Content="←" ToolTip="Outdent (Shift+Tab, Alt+←)" />
+                <Button x:Name="IndentButton" Style="{StaticResource Tool}" Content="→" ToolTip="Indent (Tab, Alt+→)" />
+                <Button x:Name="AddButton" Style="{StaticResource Tool}" Content="＋" ToolTip="Add row" />
+                <Button x:Name="CommentButton" Style="{StaticResource Tool}" Content="▣" ToolTip="Add comment (double-click a row)" />
+                <Button x:Name="ExpandButton" Style="{StaticResource Tool}" Content="⊞" ToolTip="Expand all rows" />
+                <Button x:Name="CollapseButton" Style="{StaticResource Tool}" Content="⊟" ToolTip="Collapse all rows" />
+                <Border Style="{StaticResource Sep}" />
+                <CheckBox x:Name="NumbersCheck" Content="Row numbers" ToolTip="Show row numbers" />
+                <CheckBox x:Name="ColoredCheck" Content="Colored rows" ToolTip="Tint rows by level" />
+                <TextBlock Text="Intensity" VerticalAlignment="Center" Margin="4,0" Foreground="#334155" />
+                <Slider x:Name="IntensitySlider" Width="90" Minimum="15" Maximum="100" SmallChange="5" LargeChange="5"
+                        TickFrequency="5" IsSnapToTickEnabled="True" Focusable="False" VerticalAlignment="Center" ToolTip="Colored row intensity" />
+                <ComboBox x:Name="ColorwayBox" Width="84" ToolTip="Colored row colorway" />
+                <TextBlock x:Name="SelInfo" VerticalAlignment="Center" Margin="10,0" Foreground="#2563EB" />
+            </WrapPanel>
+        </Border>
+
+        <!-- Find bar (Ctrl+F) -->
+        <Border x:Name="FindBar" Grid.Row="2" Background="#FFFBEB" BorderBrush="#DBE2EA" BorderThickness="0,0,0,1" Padding="14,6"
+                Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Find" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBox x:Name="FindBox" Width="260" />
+                <Button x:Name="FindPrev" Style="{StaticResource Tool}" Content="▲" FontSize="11" ToolTip="Previous (Shift+Enter)" />
+                <Button x:Name="FindNext" Style="{StaticResource Tool}" Content="▼" FontSize="11" ToolTip="Next (Enter)" />
+                <TextBlock x:Name="FindCount" VerticalAlignment="Center" Margin="8,0" Foreground="#64748B" />
+                <Button x:Name="FindClose" Style="{StaticResource Tool}" Content="✕" FontSize="12" ToolTip="Close (Esc)" />
+            </StackPanel>
+        </Border>
+
+        <!-- Workspace: outline and review panel -->
+        <Grid Grid.Row="3" Margin="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="ReviewColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+            <Border Background="White" BorderBrush="#DBE2EA" BorderThickness="1" CornerRadius="12">
+                <ScrollViewer x:Name="OutlineScroll" Focusable="True" FocusVisualStyle="{x:Null}" Padding="10,14"
+                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="Transparent">
+                    <Grid>
+                        <StackPanel x:Name="Rows" />
+                        <Canvas x:Name="Overlay" IsHitTestVisible="False">
+                            <Rectangle x:Name="DropLine" Height="3" Fill="#2563EB" RadiusX="1.5" RadiusY="1.5" Visibility="Collapsed" />
+                        </Canvas>
+                    </Grid>
+                </ScrollViewer>
+            </Border>
+
+            <Border x:Name="ReviewPane" Grid.Column="1" Margin="12,0,0,0" Background="White" BorderBrush="#DBE2EA"
+                    BorderThickness="1" CornerRadius="12" Padding="14" Visibility="Collapsed">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Your name" Foreground="#64748B" FontSize="12" Margin="0,0,0,4" />
+                        <TextBox x:Name="NameBox" ToolTip="Needed to comment or reply. Kept on this PC only, never in the document." />
+                    </StackPanel>
+                    <DockPanel Grid.Row="1" Margin="0,12,0,8">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button x:Name="FilterOpen" Style="{StaticResource Small}" Content="Open" />
+                            <Button x:Name="FilterResolved" Style="{StaticResource Small}" Content="Resolved" />
+                            <Button x:Name="FilterAll" Style="{StaticResource Small}" Content="All" Margin="0" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock x:Name="ReviewTitle" Text="Review" FontSize="17" FontWeight="SemiBold" />
+                            <TextBlock x:Name="OpenCount" Foreground="#64748B" FontSize="12" />
+                        </StackPanel>
+                    </DockPanel>
+                    <StackPanel x:Name="ScopePanel" Grid.Row="2" />
+                    <StackPanel x:Name="SortBar" Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="Sort" VerticalAlignment="Center" Foreground="#64748B" Margin="0,0,6,0" />
+                        <ComboBox x:Name="SortKey" Width="130" />
+                        <Button x:Name="SortDir" Style="{StaticResource Small}" Content="↑" ToolTip="Change direction" Margin="4,0,0,0" />
+                    </StackPanel>
+                    <StackPanel x:Name="Composer" Grid.Row="4" Margin="0,0,0,8" Visibility="Collapsed">
+                        <TextBox x:Name="NewComment" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80" MaxHeight="200"
+                                 VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" />
+                        <Button x:Name="PostButton" Style="{StaticResource SmallPrimary}" Content="Add comment" HorizontalAlignment="Right"
+                                Margin="0,6,0,0" />
+                    </StackPanel>
+                    <ScrollViewer Grid.Row="5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel x:Name="CommentsList" />
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Footer -->
+        <Border Grid.Row="4" Padding="14,4,14,8">
+            <DockPanel>
+                <TextBlock x:Name="VersionText" DockPanel.Dock="Right" Foreground="#64748B" FontSize="11.5" />
+                <TextBlock Foreground="#64748B" FontSize="11.5" TextWrapping="Wrap"
+                           Text="Click-drag / Ctrl / Shift: select rows   ·   Alt+click: fold level   ·   Alt+Shift+click: fold all   ·   Alt+←/→: outdent/indent   ·   Ctrl+Shift+A: all rows   ·   Alt+C, 1: black   ·   Alt+C, 2: last color   ·   Double-click: comment   ·   Delete: remove branch   ·   Backspace: keep children   ·   Ctrl+F: find   ·   Esc: Review" />
+            </DockPanel>
+        </Border>
+
+        <Border x:Name="ToastBorder" Grid.RowSpan="5" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,44"
+                Background="#172033" CornerRadius="8" Padding="13,9" Visibility="Collapsed" IsHitTestVisible="False">
+            <TextBlock x:Name="ToastText" Foreground="White" />
+        </Border>
     </Grid>
 </Window>
