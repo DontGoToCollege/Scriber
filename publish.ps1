@@ -1,24 +1,25 @@
 # Publishes Scriber as a self-contained, single-file x64 executable.
 # Usage:  .\publish.ps1            -> Scriber.exe (and Versions\Archive\Scriber-<version>.exe)
 #         .\publish.ps1 -Run       -> publish and launch
+#         .\publish.ps1 -Test      -> publish\Scriber.exe to try out; nothing archived or replaced
 # Refuses a version that's already in Versions\Archive: raise <Version> in the csproj first (the only
 # place the version is set). The build must pass its own self-check (--smoke) before it is kept.
 # If Scriber is running, it is closed first and started again on the new version.
-param([switch]$Run)
+param([switch]$Run, [switch]$Test)
 
 $ErrorActionPreference = "Stop"
 $name = "Scriber"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $proj = Join-Path $root "src\$name\$name.csproj"
-$out  = Join-Path $root "dist"
+$out  = Join-Path $root $(if ($Test) { "publish" } else { "dist" })
 $top  = Join-Path $root "$name.exe"
 
 $version = ([xml](Get-Content $proj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
 $archive = Join-Path $root "Versions\Archive\$name-$version.exe"
-if (Test-Path $archive) { throw "Version $version is already archived. Raise <Version> in the csproj, then publish again." }
+if (-not $Test -and (Test-Path $archive)) { throw "Version $version is already archived. Raise <Version> in the csproj, then publish again." }
 
 # Ask a running copy to close; never kill it.
-$running = @(Get-Process $name -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $top })
+$running = @(Get-Process $name -ErrorAction SilentlyContinue | Where-Object { -not $Test -and $_.Path -eq $top })
 foreach ($p in $running) {
     [void]$p.CloseMainWindow()
     if (-not $p.WaitForExit(15000)) { throw "Scriber is still open. Close it, then publish again." }
@@ -44,6 +45,7 @@ Write-Host $report
 
 # Only the exe is needed; drop symbol/side files and the self-check's data.
 Get-ChildItem $out | Where-Object { $_.Name -ne "$name.exe" } | Remove-Item -Recurse -Force
+if ($Test) { Write-Host "Test build (not archived): $exe" -ForegroundColor Green; return }
 
 # Every build is kept: the current one at the top level, and a copy per version in Versions\Archive.
 New-Item -ItemType Directory -Force (Split-Path $archive) | Out-Null
