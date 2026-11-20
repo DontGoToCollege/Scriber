@@ -37,7 +37,7 @@ Feature parity with 2.x (all of these stay):
 - Rows: Enter adds, Tab/Shift+Tab and Alt+arrows indent, Alt+Enter adds a row one level up, bullets and numbers,
   folding (Alt+click folds a level, Alt+Shift+click folds everything, expand/collapse all), drag rows by the handle,
   multi-select (click-drag, Ctrl, Shift, Ctrl+Shift+A), row numbers, colored rows (Rainbow/Neon with intensity).
-- Text: bold, italic, underline, font, size and color for selected text or whole rows; Alt+C then 1 (black) or 2
+- Text: bold, italic, underline, font, size and color for selected text or whole rows; Ctrl+Alt+C then 1 (black) or 2
   (last color); paste lists from Word, web pages and plain text as rows with the same indents.
 - Review panel (Esc): comment on a row (double-click or button), reply, resolve or reopen, edit with history,
   delete thread, open/resolved/all filter, sort by row or created/modified date, per-row comment badges.
@@ -63,3 +63,7 @@ Build and check:
   client area (even with software rendering). Never real input (see the global rules).
 - WPF gotchas met here: a row's TextDecorations can't be cancelled by a child run, so row underline is set per run;
   the RichTextBox's own scroller eats the mouse wheel (forwarded to the outline); its undo is off (document undo).
+- Setting WindowState = Maximized before the window exists maximizes on the main screen; it is set in SourceInitialized.
+- Real paste tests: copy from Word through COM (Selection.Copy), and from Brave through its debug port (Runtime.evaluate
+  with userGesture: selectAll + copy). Brave ignored keybd_event Ctrl+A/C. Chromium's copy sets every run to black and
+  the page's font; that's kept (no dark theme, and paste keeps fonts by design).

@@ -49,8 +49,8 @@ back the next time you start Scriber. Opening another outline never throws away 
 | `Alt+←` / `Alt+→` | Outdent / indent |
 | `Alt+Enter` | New row one level up |
 | `Shift+Enter` | Line break inside a row |
-| `Alt+C` then `1` | Black text |
-| `Alt+C` then `2` | Last used text color |
+| `Ctrl+Alt+C` then `1` | Black text |
+| `Ctrl+Alt+C` then `2` | Last used text color |
 | `Ctrl+Shift+V` | Paste as plain text |
 | Double-click | Comment on the row |
 | `Delete` (on an empty row or several rows) | Remove the rows and everything under them |

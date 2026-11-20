@@ -32,7 +32,7 @@ public partial class MainWindow : Window
     string _committed = "";
     readonly List<string> _undo = new(), _redo = new();
     bool _syncing; // controls are being set from the document, not by the user
-    bool _chord;   // Alt+C was pressed; 1 or 2 picks a color
+    bool _chord;   // Ctrl+Alt+C was pressed; 1 or 2 picks a color
 
     static readonly string[] Fonts = { "Segoe UI", "Arial", "Calibri", "Times New Roman", "Georgia", "Consolas" };
     static readonly int[] Sizes = { 12, 14, 16, 18, 20, 24, 28, 32 };
@@ -69,7 +69,7 @@ public partial class MainWindow : Window
         SourceInitialized += (_, _) =>
         {
             SetTitleBarColors();
-            // The shortcuts lean on Alt (Alt+click, Alt+C then 1). Letting go of Alt on its own would put Windows in
+            // The shortcuts lean on Alt (Alt+click, Alt+arrows). Letting go of Alt on its own would put Windows in
             // "menu mode", which swallows the next key press. Alt+Space still works.
             HwndSource.FromHwnd(new WindowInteropHelper(this).Handle).AddHook(
                 (IntPtr _, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) =>
@@ -117,6 +117,7 @@ public partial class MainWindow : Window
         RenderRows();
         RenderReview();
         SyncViewControls();
+        FocusRow(_active, Caret.Start);  // so typing or pasting works without a click first
         UpdateHistoryButtons();
         UpdateTitle();
         SetStatus(path != null ? "Saved" : draft != null ? "Draft (not saved as a file yet)" : "", false);
@@ -617,7 +618,7 @@ public partial class MainWindow : Window
         var row = (focus as RichTextBox)?.Tag as RowView;
         bool inTextBox = focus is TextBox;
 
-        if (alt && !ctrl && key == Key.C)
+        if (alt && ctrl && !shift && key == Key.C)
         {
             StartChord();
             e.Handled = true;
@@ -813,7 +814,8 @@ public partial class MainWindow : Window
                 Top = _settings.Top;
             }
         }
-        if (_settings.Maximized) WindowState = WindowState.Maximized;
+        // set once the window exists at its saved spot; set earlier, it maximizes on the main screen
+        if (_settings.Maximized) SourceInitialized += (_, _) => WindowState = WindowState.Maximized;
     }
 
     void SavePlacement()

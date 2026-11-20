@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.1 (2026-11-20)
+
+- The text color shortcut is now `Ctrl+Alt+C`, then `1` (black) or `2` (last color). `Alt+C` is often taken by
+  other tools (AutoHotkey scripts, for one), so it never reached Scriber.
+- A window left maximized on a second screen opens maximized there again (it used to jump to the main screen).
+- Opening an outline puts the caret in its first row, so you can type or paste right away without clicking.
+
 ## 3.0.0 (2026-11-20)
 
 The first release named Scriber, and a rewrite: a native Windows program with no web page inside.
