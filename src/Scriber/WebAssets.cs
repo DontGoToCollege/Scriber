@@ -1,7 +1,7 @@
 using System.IO;
 using System.Reflection;
 
-namespace OutlineReviewNotepad;
+namespace Scriber;
 
 /// <summary>Serves the embedded web app (web/**) by URL path.</summary>
 public static class WebAssets

@@ -1,4 +1,4 @@
-// Self-check run by `OutlineReviewNotepad.exe --smoke` (see RunSmokeAsync in MainWindow.xaml.cs).
+// Self-check run by `Scriber.exe --smoke` (see RunSmokeAsync in MainWindow.xaml.cs).
 // Writes a row, adds a comment, saves the shareable HTML and the backup, then opens that HTML
 // again the way a returned review copy would be. Throwing fails the check.
 // It runs in its own scratch profile, so the real outline is never touched.

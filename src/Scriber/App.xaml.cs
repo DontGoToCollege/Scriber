@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace OutlineReviewNotepad;
+namespace Scriber;
 
 public partial class App : Application
 {

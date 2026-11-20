@@ -1,9 +1,9 @@
-# Draws srcOutlineReviewNotepadapp.ico (16..256 px): a blue tile with three indented outline rows.
+# Draws srcScriberapp.ico (16..256 px): a blue tile with three indented outline rows.
 # Usage: powershell -ExecutionPolicy Bypass -File tools\make-icon.ps1
 $ErrorActionPreference = "Stop"
 Add-Type -AssemblyName System.Drawing
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$dst  = Join-Path $root "src\OutlineReviewNotepad\app.ico"
+$dst  = Join-Path $root "src\Scriber\app.ico"
 
 # Drawn on a 256x256 grid; the graphics object is scaled for each size.
 function Draw($g) {

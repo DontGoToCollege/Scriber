@@ -7,7 +7,7 @@ using System.Windows.Media;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Win32;
 
-namespace OutlineReviewNotepad;
+namespace Scriber;
 
 public partial class MainWindow : Window
 {

@@ -1,7 +1,7 @@
 using System.IO;
 using System.Text.Json;
 
-namespace OutlineReviewNotepad;
+namespace Scriber;
 
 /// <summary>Window placement, stored in the portable data folder.</summary>
 public sealed class WindowSettings

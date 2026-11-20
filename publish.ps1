@@ -1,13 +1,13 @@
-# Publishes Outline Review Notepad as a self-contained, single-file x64 executable.
-# Usage:  .\publish.ps1            -> OutlineReviewNotepad.exe (and Versions\Archive\OutlineReviewNotepad-<version>.exe)
+# Publishes Scriber as a self-contained, single-file x64 executable.
+# Usage:  .\publish.ps1            -> Scriber.exe (and Versions\Archive\Scriber-<version>.exe)
 #         .\publish.ps1 -Run       -> publish and launch
 # Refuses a version that's already in Versions\Archive: raise <Version> in the csproj and V in
 # web\index.html first. The build must pass its own self-check (--smoke) before it is kept.
-# If Outline Review Notepad is running, it is closed first and started again on the new version.
+# If Scriber is running, it is closed first and started again on the new version.
 param([switch]$Run)
 
 $ErrorActionPreference = "Stop"
-$name = "OutlineReviewNotepad"
+$name = "Scriber"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $proj = Join-Path $root "src\$name\$name.csproj"
 $out  = Join-Path $root "dist"
@@ -23,14 +23,14 @@ if ($web -notmatch "const V='$([regex]::Escape($version))'") { throw "web\index.
 $running = @(Get-Process $name -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $top })
 foreach ($p in $running) {
     [void]$p.CloseMainWindow()
-    if (-not $p.WaitForExit(15000)) { throw "Outline Review Notepad is still open. Close it, then publish again." }
+    if (-not $p.WaitForExit(15000)) { throw "Scriber is still open. Close it, then publish again." }
 }
 
 # On some PCs the `dotnet` on PATH is the x86 one without an SDK.
 $dotnet = "C:\Program Files\dotnet\dotnet.exe"
 if (-not (Test-Path $dotnet)) { $dotnet = "dotnet" }
 
-Write-Host "Publishing Outline Review Notepad $version (Release, win-x64, self-contained, single file)..." -ForegroundColor Cyan
+Write-Host "Publishing Scriber $version (Release, win-x64, self-contained, single file)..." -ForegroundColor Cyan
 & $dotnet publish $proj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true `
     -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o $out --nologo
 if ($LASTEXITCODE -ne 0) { throw "publish failed" }

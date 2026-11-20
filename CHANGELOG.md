@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.0 (unreleased; ships with 3.0.0)
+
+- Renamed from Outline Review Notepad to Scriber. The exe is now `Scriber.exe` and its data folder `Scriber-Data`.
+  An existing `OutlineReviewNotepad-Data` folder beside the exe is renamed on first run, so the outline carries over.
+
 ## 2.0.0 (2026-11-11)
 
 - Outline Review Notepad is now a desktop program: one portable `OutlineReviewNotepad.exe` instead of an HTML file in

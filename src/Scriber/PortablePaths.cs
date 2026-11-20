@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace OutlineReviewNotepad;
+namespace Scriber;
 
 /// <summary>
 /// Portable data lives in a folder next to the exe, so copying the exe together with that folder
@@ -19,11 +19,28 @@ public static class PortablePaths
 
     static string ResolveDataDir()
     {
-        var portable = Path.Combine(ExeDir, AppInfo.DataFolder);
+        var portable = Adopt(Path.Combine(ExeDir, AppInfo.DataFolder), Path.Combine(ExeDir, AppInfo.OldDataFolder));
         if (CanWrite(portable)) return portable;
-        var fallback = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppInfo.FallbackFolder);
+        var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var fallback = Adopt(Path.Combine(local, AppInfo.FallbackFolder), Path.Combine(local, AppInfo.OldFallbackFolder));
         Directory.CreateDirectory(fallback);
         return fallback;
+    }
+
+    /// <summary>Renames a data folder left by the old app name. If it can't be moved (say the old app is still
+    /// open), keeps using it where it is, so the outline never looks lost.</summary>
+    static string Adopt(string dir, string oldDir)
+    {
+        if (Directory.Exists(dir) || !Directory.Exists(oldDir)) return dir;
+        try
+        {
+            Directory.Move(oldDir, dir);
+            return dir;
+        }
+        catch
+        {
+            return oldDir;
+        }
     }
 
     static bool CanWrite(string dir)
