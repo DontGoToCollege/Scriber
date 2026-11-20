@@ -526,6 +526,7 @@ public partial class MainWindow : Window
                 Style = (Style)FindResource("Tool"), Width = 24, Height = 24, MinWidth = 24, Margin = new Thickness(2),
                 Background = Br(c), BorderBrush = Br("#CBD5E1"), BorderThickness = new Thickness(1), ToolTip = c,
             };
+            System.Windows.Automation.AutomationProperties.SetName(b, c); // a name for screen readers and UI Automation
             b.Click += (_, _) =>
             {
                 ColorPopup.IsOpen = false;

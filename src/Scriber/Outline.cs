@@ -474,15 +474,13 @@ public partial class MainWindow
         }
         _anchor = Math.Max(0, Index(id));
         UpdateSelectionVisuals();
-        if (_smoke) return;
-        Dispatcher.BeginInvoke(DispatcherPriority.Input, () =>
-        {
-            if (!_views.TryGetValue(id, out var v)) return;
-            v.Box.Focus();
-            if (where == Caret.End) v.Box.CaretPosition = v.Box.Document.ContentEnd;
-            else if (where == Caret.Start) v.Box.CaretPosition = v.Box.Document.ContentStart;
-            v.Root.BringIntoView();
-        });
+        if (_smoke || !_views.TryGetValue(id, out var v)) return;
+        // at once, not queued: keys typed right after Enter or Tab must land in the new row
+        if (!v.Box.IsVisible) Rows.UpdateLayout();
+        v.Box.Focus();
+        if (where == Caret.End) v.Box.CaretPosition = v.Box.Document.ContentEnd;
+        else if (where == Caret.Start) v.Box.CaretPosition = v.Box.Document.ContentStart;
+        v.Root.BringIntoView();
     }
 
     bool MoveToRow(int dir)
