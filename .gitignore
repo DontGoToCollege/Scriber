@@ -13,3 +13,6 @@ __pycache__/
 
 # Each app keeps its data in a folder beside the exe
 *-Data/
+
+# Handoff notes stay on this PC
+.claude/handoffs/
