@@ -66,8 +66,11 @@ Build and check:
 - Copy/paste and drag (Clip.cs): rows go on the clipboard as Scriber.Rows (JSON), HTML lists and tabbed text; Ctrl+V
   with rows selected pastes over them in one undo step (InStep). Paste readers in Html.cs: FromPlain (PDF, Notepad,
   Markdown) and ToItems (Word, web). The self-check never touches the real clipboard (_smokeClip).
-- Real drag tests: Word and WordPad don't start text drags from simulated mouse input, so drops into Scriber are tested
-  with a small WinForms DoDragDrop source in another process. Brave's PDF viewer ignores CDP keys; a real click into
+- Real drag tests: Word does start text drags from SendInput (absolute moves in small steps, ~40 ms apart), but the
+  INPUT struct must be exactly 40 bytes on x64; a padded one makes SendInput fail silently and looks like "Word won't
+  drag". Word into Scriber was tested this way in 3.1.0 (levels and bold arrive, Word keeps its text). A last line
+  selected without its paragraph mark arrives as plain text: that's Word's own HTML, and pasting into Word does the same.
+  Scriber's drop side can also be tested with a small WinForms DoDragDrop source in another process. Brave's PDF viewer ignores CDP keys; a real click into
   the page and then Ctrl+A/C copies its text.
 - Setting WindowState = Maximized before the window exists maximizes on the main screen; it is set in SourceInitialized.
 - Real paste tests: copy from Word through COM (Selection.Copy), and from Brave through its debug port (Runtime.evaluate
