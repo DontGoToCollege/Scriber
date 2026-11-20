@@ -19,6 +19,8 @@ public partial class MainWindow : Window
 {
     [DllImport("dwmapi.dll")]
     static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+    [DllImport("user32.dll")]
+    static extern uint GetDpiForSystem();
 
     readonly bool _smoke;
     readonly Settings _settings = Settings.Load();
@@ -823,8 +825,11 @@ public partial class MainWindow : Window
         var r = WindowState != WindowState.Normal ? RestoreBounds : new Rect(Left, Top, Width, Height);
         if (!r.IsEmpty)
         {
-            _settings.Left = r.Left;
-            _settings.Top = r.Top;
+            // Left/Top read back at this screen's scale, but a new window places them at the main screen's scale:
+            // save them at the main screen's scale, or a window closed on a screen at another scale creeps away
+            var k = VisualTreeHelper.GetDpi(this).DpiScaleX / (GetDpiForSystem() / 96.0);
+            _settings.Left = r.Left * k;
+            _settings.Top = r.Top * k;
             _settings.Width = r.Width;
             _settings.Height = r.Height;
         }

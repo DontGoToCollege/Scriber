@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.2 (2026-11-20)
+
+- A window closed on a screen with a different scale (say 100% next to 125%) reopens where you left it. It used to
+  creep further away each time, and could end up off the screen.
+
 ## 3.0.1 (2026-11-20)
 
 - The text color shortcut is now `Ctrl+Alt+C`, then `1` (black) or `2` (last color). `Alt+C` is often taken by
