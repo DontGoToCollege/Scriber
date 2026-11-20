@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.1.0 (2026-11-20)
+
+Copying and pasting between Scriber and other programs.
+
+- **Copy and cut rows** with `Ctrl+C` / `Ctrl+X` (several rows selected, or a row with no text selected). They
+  paste into Word, Outlook, Google Docs and web editors as real nested bulleted and numbered lists with their bold,
+  italics and colors; into Notepad and chats as text with one Tab per level; and into Scriber with nothing lost
+  (comments come along when you cut and paste).
+- **Paste in place of selected rows** with `Ctrl+V`, **duplicate** with `Ctrl+D`, select rows with
+  `Shift+↑` / `Shift+↓`, and `Ctrl+A` twice selects every row. `Ctrl+B` / `I` / `U` work on several selected
+  rows.
+- **Smarter paste**: text copied from a PDF keeps its structure (wrapped lines are joined, and Word's bullets and
+  numbering styles set the levels). Markdown (`- lists`, `# headings`, `**bold**`, `*italic*`), letters,
+  roman numerals, `(1)` and `1.2.3` numbering are understood. Word headings become outline levels, and Word rows
+  moved with Increase Indent keep their level.
+- After a paste, a note offers **Undo** and **Text only** (keep the text and levels, drop the formatting).
+- **Drag and drop**: drag rows by their handle into Word or another program, and drag text in from other programs.
+- Down or Up on the first or last row ends a multi-row selection.
+
 ## 3.0.2 (2026-11-20)
 
 - A window closed on a screen with a different scale (say 100% next to 125%) reopens where you left it. It used to

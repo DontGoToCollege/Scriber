@@ -245,13 +245,22 @@
             <DockPanel>
                 <TextBlock x:Name="VersionText" DockPanel.Dock="Right" Foreground="#64748B" FontSize="11.5" />
                 <TextBlock Foreground="#64748B" FontSize="11.5" TextWrapping="Wrap"
-                           Text="Click-drag / Ctrl / Shift: select rows   ·   Alt+click: fold level   ·   Alt+Shift+click: fold all   ·   Alt+←/→: outdent/indent   ·   Ctrl+Shift+A: all rows   ·   Ctrl+Alt+C, 1: black   ·   Ctrl+Alt+C, 2: last color   ·   Double-click: comment   ·   Delete: remove branch   ·   Backspace: keep children   ·   Ctrl+F: find   ·   Esc: Review" />
+                           Text="Click-drag / Ctrl / Shift: select rows   ·   Alt+click: fold level   ·   Alt+Shift+click: fold all   ·   Alt+←/→: outdent/indent   ·   Shift+↑/↓: select rows   ·   Ctrl+C/X/V: rows   ·   Ctrl+D: duplicate   ·   Ctrl+Shift+A: all rows   ·   Ctrl+Alt+C, 1: black   ·   Ctrl+Alt+C, 2: last color   ·   Double-click: comment   ·   Delete: remove branch   ·   Backspace: keep children   ·   Ctrl+F: find   ·   Esc: Review" />
             </DockPanel>
         </Border>
 
         <Border x:Name="ToastBorder" Grid.RowSpan="5" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,44"
                 Background="#172033" CornerRadius="8" Padding="13,9" Visibility="Collapsed" IsHitTestVisible="False">
             <TextBlock x:Name="ToastText" Foreground="White" />
+        </Border>
+        <Border x:Name="PasteNote" Grid.RowSpan="5" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,44"
+                Background="#172033" CornerRadius="8" Padding="13,3,5,3" Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="PasteNoteText" Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <Button x:Name="PasteUndo" Content="Undo" Style="{StaticResource Tool}" Foreground="#93C5FD" />
+                <Button x:Name="PasteTextOnly" Content="Text only" Style="{StaticResource Tool}" Foreground="#93C5FD"
+                        ToolTip="Keep the text, levels and bullets; drop bold, colors, fonts and sizes" />
+            </StackPanel>
         </Border>
     </Grid>
 </Window>

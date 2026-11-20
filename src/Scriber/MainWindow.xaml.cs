@@ -83,6 +83,7 @@ public partial class MainWindow : Window
         };
         WireToolbar();
         WireOutline();
+        WireClipboard();
         WireReview();
         WireFind();
         PreviewKeyDown += OnKey;
@@ -406,6 +407,7 @@ public partial class MainWindow : Window
     void Toast(string text)
     {
         ToastText.Text = text;
+        HidePasteNote();
         ToastBorder.Visibility = Visibility.Visible;
         _toastTimer.Stop();
         _toastTimer.Start();
@@ -436,6 +438,7 @@ public partial class MainWindow : Window
     /// <summary>Call before a change; Commit() after it.</summary>
     void Mark()
     {
+        if (_inStep) return;
         CommitTyping();
         PushUndo(_committed);
     }
@@ -717,9 +720,58 @@ public partial class MainWindow : Window
             return;
         }
 
-        // Delete and Backspace edit text while typing; they remove rows only for an empty row or several selected rows.
         bool many = _selected.Count > 1;
         bool rowsFocused = row == null && _selected.Count > 0;
+        bool rowMode = many || rowsFocused; // rows are selected, not text
+        int dir = key == Key.Up ? -1 : key == Key.Down ? 1 : 0;
+
+        // rows: copy and cut (also the row being typed in when no text is selected), paste over, duplicate
+        if (ctrl && !alt && !shift && key is Key.C or Key.X && (rowMode || (row != null && row.Box.Selection.IsEmpty)))
+        {
+            CopyRows(key == Key.X);
+            e.Handled = true;
+            return;
+        }
+        if (ctrl && !alt && key == Key.V && rowMode)
+        {
+            PasteOver(SafeClipboard(), shift);
+            e.Handled = true;
+            return;
+        }
+        if (ctrl && !alt && !shift && key == Key.D)
+        {
+            DuplicateRows();
+            e.Handled = true;
+            return;
+        }
+        // Ctrl+A selects the row's text, and pressed again, all rows
+        if (ctrl && !alt && !shift && key == Key.A && (rowMode || (row != null && AllTextSelected(row))))
+        {
+            SelectAllRows();
+            e.Handled = true;
+            return;
+        }
+        // Shift+Up/Down past the row's first or last line selects rows
+        if (shift && !ctrl && !alt && dir != 0 && (rowMode || (row != null && OnEdgeLine(row.Box, dir))))
+        {
+            ExtendRows(dir);
+            e.Handled = true;
+            return;
+        }
+        if (rowMode && mods == ModifierKeys.None && dir != 0)
+        {
+            if (!MoveToRow(dir) && _active != null) FocusRow(_active); // at the first or last row: back to just that row
+            e.Handled = true;
+            return;
+        }
+        if (ctrl && !alt && key is Key.B or Key.I or Key.U && (row != null || rowMode))
+        {
+            Exec(key == Key.B ? "bold" : key == Key.I ? "italic" : "underline");
+            e.Handled = true;
+            return;
+        }
+
+        // Delete and Backspace edit text while typing; they remove rows only for an empty row or several selected rows.
         if (key == Key.Delete && !ctrl && !alt)
         {
             if (many || rowsFocused || (row != null && row.B.Runs.Count == 0))
@@ -738,12 +790,6 @@ public partial class MainWindow : Window
             return;
         }
         if (row == null) return;
-        if (ctrl && key is Key.B or Key.I or Key.U)
-        {
-            Exec(key == Key.B ? "bold" : key == Key.I ? "italic" : "underline");
-            e.Handled = true;
-            return;
-        }
         if (ctrl && shift && key == Key.V)
         {
             PasteInto(row, SafeClipboard(), true);

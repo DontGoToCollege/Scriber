@@ -1,4 +1,5 @@
 using System.IO;
+using System.Windows;
 using System.Windows.Documents;
 
 namespace Scriber;
@@ -138,6 +139,99 @@ public partial class MainWindow
             pv.Box.CaretPosition = pv.Box.Document.ContentEnd;
             PasteRows(pv, Html.FromPlain("x\n\ty"), false);
             Check(_doc.Blocks.Select(b => b.Text).SequenceEqual(new[] { "Keep me", "x", "y" }) && _doc.Blocks[2].Level == 1, "pasting rows keeps the row's text");
+
+            // smarter paste: PDF text, Markdown, letters and roman numerals, Word indents and headings
+            string Shape(List<Html.Item> items) => string.Join(",", items.Select(x => $"{x.Text}/{x.Level}/{x.Type}"));
+            var pdf = Html.FromPlain("Shopping list for the week ahead, including everything for the trip and the party\r\n" +
+                                     "• Fruit and vegetables from the market on Saturday morning before the\r\nrush starts\r\n" +
+                                     "o Apples\r\no Pears\r\n Bread\r\n•\r\nMilk");
+            Check(Shape(pdf) == "Shopping list for the week ahead, including everything for the trip and the party/0/none," +
+                  "Fruit and vegetables from the market on Saturday morning before the rush starts/1/bullet,Apples/2/bullet,Pears/2/bullet," +
+                  "Bread/1/bullet,Milk/1/bullet", "PDF paste: wrapped lines joined, levels from the bullets");
+            // text as Brave's PDF viewer copies a Word PDF: no indents, Word's bullets, wrapped lines, then a numbered list
+            var pdf2 = Html.FromPlain("Trip planning notes for the long weekend away, covering what to book, what to pack and\r\n" +
+                                      "what still needs a decision before Friday evening.\r\n• Book the train\r\n" +
+                                      "o Window seat if the early train still has some left, otherwise any seat in the\r\nquiet coach near the front\r\n" +
+                                      "▪ Check the return time\r\n• Pack bags\r\no Charger\r\n1) First stop\r\n2) Second stop\r\na) Lunch near the harbour");
+            Check(string.Join(",", pdf2.Select(x => x.Level)) == "0,1,2,3,1,2,1,1,2" && pdf2.Count == 9 &&
+                  pdf2[2].Text.EndsWith("quiet coach near the front") && pdf2[6].Type == "number", "PDF paste (Brave's PDF viewer)");
+            var md = Html.FromPlain("# Trip\n- **Book** train\n  - seat *window*\n## Day two\nWalk");
+            Check(Shape(md) == "Trip/0/none,Book train/1/bullet,seat window/2/bullet,Day two/1/none,Walk/2/none" &&
+                  md[0].Runs[0].Bold == true && md[1].Runs[0].Bold == true && md[1].Runs[1].Bold == null && md[2].Runs[1].Italic == true,
+                  "Markdown paste");
+            Check(Shape(Html.FromPlain("1. One\na. Sub\ni. Deeper\nb. Sub two\n2. Two\n(3) Three")) ==
+                  "One/0/number,Sub/1/number,Deeper/2/number,Sub two/1/number,Two/0/number,Three/0/number", "letters and roman numerals");
+            Check(Shape(Html.FromPlain("1 Intro\n1.1 Scope\n1.1.1 Detail\n2 Next\nNeeds 1.5 cups")) ==
+                  "1 Intro/0/none,Scope/1/number,Detail/2/number,2 Next/0/none,Needs 1.5 cups/0/none", "outline numbers");
+            Check(Shape(Html.FromPlain("Milk\nEggs\nBread")) == "Milk/0/none,Eggs/0/none,Bread/0/none", "short lines stay rows");
+            var indent = Html.ToItems("<p style='mso-list:l0 level1 lfo1'>A</p><p style='margin-left:.75in;mso-list:l0 level1 lfo1'>B</p>" +
+                                      "<p style='margin-left:1.0in;mso-list:l0 level1 lfo1'>C</p><p style='mso-list:l0 level2 lfo1'>D</p>");
+            Check(string.Join(",", indent.Select(x => x.Level)) == "0,1,2,1", "Word Increase Indent keeps levels");
+            var heads = Html.ToItems("<h1>Title</h1><p>Intro</p><h2>Part</h2><ul><li>Point</li></ul>");
+            Check(Shape(heads) == "Title/0/none,Intro/1/none,Part/1/none,Point/2/bullet" && heads[0].Runs[0].Bold == true, "headings become levels");
+
+            // rows on the clipboard: HTML lists, tabbed text and Scriber's own rows
+            LoadDocument(Doc.New(), null, null);
+            _doc.Blocks[0].Runs = new() { new TextRun { Text = "Plan", Bold = true } };
+            _doc.Blocks[0].Type = "bullet";
+            _doc.Blocks.Add(new Block { Level = 1, Type = "number", Runs = { new TextRun { Text = "Step & one ✓" } } });
+            _doc.Blocks.Add(new Block { Level = 1, Type = "number", Runs = { new TextRun { Text = "Step two", Color = "#FF0000" } } });
+            _doc.Blocks.Add(new Block { Runs = { new TextRun { Text = "Note" } } });
+            _doc.Comments.Add(new Comment { BlockId = _doc.Blocks[1].Id, Text = "on step one" });
+            RenderRows();
+            SelectRange(0, 3);
+            _active = _doc.Blocks[0].Id;
+            CopyRows(false);
+            var clipHtml = (string)_smokeClip!.GetData(DataFormats.Html);
+            var back = Html.ToItems(Html.Fragment(clipHtml));
+            Check(Shape(back) == "Plan/0/bullet,Step & one ✓/1/number,Step two/1/number,Note/0/none" && back[0].Runs[0].Bold == true &&
+                  back[2].Runs[0].Color == "#FF0000", "copied rows read back from HTML");
+            int startFrag = int.Parse(System.Text.RegularExpressions.Regex.Match(clipHtml, @"StartFragment:(\d+)").Groups[1].Value);
+            Check(System.Text.Encoding.UTF8.GetString(System.Text.Encoding.UTF8.GetBytes(clipHtml)[startFrag..]).StartsWith("<p>") ||
+                  System.Text.Encoding.UTF8.GetString(System.Text.Encoding.UTF8.GetBytes(clipHtml)[startFrag..]).StartsWith("<ul>"), "HTML clipboard offsets");
+            var clipText = (string)_smokeClip.GetData(DataFormats.UnicodeText);
+            Check(clipText == "• Plan\r\n\t1. Step & one ✓\r\n\t2. Step two\r\nNote", "copied rows as text");
+            Check(Shape(Html.FromPlain(clipText)) == "Plan/0/bullet,Step & one ✓/1/number,Step two/1/number,Note/0/none", "copied text reads back");
+            var last = _views[_doc.Blocks[3].Id];
+            FocusRow(_doc.Blocks[3].Id);
+            last.Box.CaretPosition = last.Box.Document.ContentEnd;
+            PasteInto(last, _smokeClip, false);
+            Check(_doc.Blocks.Count == 8 && _doc.Blocks.Select(b => b.Id).Distinct().Count() == 8 && _doc.Blocks[4].Text == "Plan" &&
+                  _doc.Blocks[5].Level == 1 && _doc.Comments.Count == 1, "Scriber rows paste as copies (comments not doubled)");
+            SelectRange(0, 0);
+            _active = _doc.Blocks[0].Id;
+            CopyRows(true);
+            Check(_doc.Blocks.Count == 5 && _doc.Comments.Count == 0, "cut takes the row with what's under it");
+            var end = _views[_doc.Blocks[^1].Id];
+            FocusRow(_doc.Blocks[^1].Id);
+            end.Box.CaretPosition = end.Box.Document.ContentEnd;
+            PasteInto(end, _smokeClip, false);
+            Check(_doc.Blocks.Count == 8 && _doc.Comments.Count == 1 && _doc.Blocks.Any(b => b.Id == _doc.Comments[0].BlockId && b.Text.StartsWith("Step & one")),
+                  "cut and paste moves comments along");
+            Undo();
+            Check(_doc.Blocks.Count == 5, "undo a paste");
+            SelectRange(1, 2);
+            _active = _doc.Blocks[1].Id;
+            var over = new DataObject(DataFormats.UnicodeText, "x\n\ty");
+            PasteOver(over, false);
+            // the selected "Plan" row goes with what's under it (like Delete); x and y take its place
+            Check(_doc.Blocks.Count == 4 && _doc.Blocks[1].Text == "x" && _doc.Blocks[2].Text == "y" && _doc.Blocks[2].Level == _doc.Blocks[1].Level + 1,
+                  "paste over selected rows");
+            Undo();
+            Check(_doc.Blocks.Count == 5 && _doc.Blocks[1].Text != "x", "paste over undoes in one step");
+            SelectRange(0, 0);
+            _active = _doc.Blocks[0].Id;
+            int before = _doc.Blocks.Count;
+            DuplicateRows();
+            Check(_doc.Blocks.Count == before + 1 && _doc.Blocks[1].Text == _doc.Blocks[0].Text && _doc.Blocks[1].Id != _doc.Blocks[0].Id, "Ctrl+D duplicates");
+            FocusRow(_doc.Blocks[0].Id);
+            ExtendRows(1);
+            ExtendRows(1);
+            Check(_selected.Count == 3, "Shift+Down selects rows");
+            ExtendRows(-1);
+            Check(_selected.Count == 2, "Shift+Up shrinks the selection");
+            TextOnly(_doc.Blocks.Select(b => b.Id).ToList());
+            Check(_doc.Blocks.All(b => b.RowStyle == null && b.Runs.All(r => r.SameFormat(new TextRun()))), "text only drops formatting");
 
             // export, print layout, find
             LoadDocument(DocFile.Load(file), file, null);

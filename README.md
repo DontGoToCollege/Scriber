@@ -15,8 +15,13 @@ single program: no installer, just run it.
   selected several at a time.
 - **Format**: bold, italic, underline, font, size and text color, for the selected text or for whole rows. Rows can be
   tinted by level (Rainbow or Neon, with adjustable strength), and row numbers can be shown.
-- **Paste** a list from Word, a web page or plain text and it becomes rows with the same indents. The row you paste
-  into keeps its text.
+- **Copy and paste rows** to and from other programs. Rows you copy (`Ctrl+C`, or `Ctrl+X` to cut) paste into Word,
+  Outlook, Google Docs or a web editor as real bulleted and numbered lists with their formatting, into Notepad or a chat
+  as text with one Tab per level, and into Scriber (this outline or another) with nothing lost. Lists pasted in from
+  Word, web pages, PDFs, Notepad and Markdown become rows with the same levels: Word headings become levels too, lines a
+  PDF wrapped are joined again, and PDF bullets (`•`, `o`, `▪`) and numbers (`1.`, `a.`, `i.`) set the levels.
+  The row you paste into keeps its text. After a paste, **Undo** or **Text only** (drop the formatting) is one click.
+- **Drag** rows by their `⋮` handle out to Word or another program, and drag text in from other programs.
 - **Review**: double-click a row (or press ▣) to comment on it. Open the Review panel with `Esc` to see every thread,
   reply, resolve or reopen, edit, and look at a comment's history. Filter by open or resolved and sort by row or date.
   Your name is kept on your PC, not in the outline.
@@ -43,7 +48,12 @@ back the next time you start Scriber. Opening another outline never throws away 
 | Keys | What it does |
 |---|---|
 | Click-drag, `Ctrl`+click, `Shift`+click | Select rows |
-| `Ctrl+Shift+A` | Select all rows |
+| `Ctrl+Shift+A`, or `Ctrl+A` twice | Select all rows |
+| `Shift+↑` / `Shift+↓` | Select rows from the keyboard (past a row's first or last line) |
+| `Ctrl+C` / `Ctrl+X` (rows selected, or no text selected) | Copy / cut the rows and everything under them |
+| `Ctrl+V` (rows selected) | Paste in place of the selected rows |
+| `Ctrl+D` | Duplicate the selected rows |
+| `Ctrl+B` / `Ctrl+I` / `Ctrl+U` (rows selected) | Bold / italic / underline the whole rows |
 | `Alt`+click | Fold or unfold every row at that level |
 | `Alt+Shift`+click | Fold or unfold everything |
 | `Alt+←` / `Alt+→` | Outdent / indent |

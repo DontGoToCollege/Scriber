@@ -125,8 +125,7 @@ public partial class MainWindow
         box.Padding = new Thickness(0, 7, 4, 7);
         box.AcceptsTab = false;
         box.IsUndoEnabled = false; // undo is the document's (structure and comments too)
-        box.IsInactiveSelectionHighlightEnabled = true;
-        box.AllowDrop = false;
+        box.IsInactiveSelectionHighlightEnabled = true; // drops are the outline's (Clip.cs), not the box's
         box.FocusVisualStyle = null;
         box.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
         box.Document = new FlowDocument { PagePadding = new Thickness(0) };
@@ -635,6 +634,23 @@ public partial class MainWindow
     void RowDragMove(MouseEventArgs e)
     {
         if (_dragRoots == null) return;
+        var p = e.GetPosition(this);
+        if (p.X < 0 || p.Y < 0 || p.X > ActualWidth || p.Y > ActualHeight)
+        {
+            // dragged out of the window: hand a copy of the rows to whatever program they're dropped on
+            var rows = _dragRoots.SelectMany(r => _doc.Blocks.GetRange(r, End(r) - r)).ToList();
+            EndRowDrag(false);
+            _dragOut = true; // brought back and dropped in Scriber, it's a move again (Clip.cs)
+            try
+            {
+                DragDrop.DoDragDrop(this, RowsData(rows), DragDropEffects.Copy);
+            }
+            finally
+            {
+                _dragOut = false;
+            }
+            return;
+        }
         var y = e.GetPosition(Rows).Y;
         int i = RowIndexAt(y);
         if (i < 0) return;
@@ -699,6 +715,15 @@ public partial class MainWindow
     {
         if (_selected.Count == 0) return;
         Mark();
+        RemoveCore(preserveChildren, out var target);
+        Commit();
+        RenderRows();
+        FocusRow(target);
+    }
+
+    /// <summary>Takes the selected rows out (no undo step, no redraw). Returns where the first one was.</summary>
+    int RemoveCore(bool preserveChildren, out string target)
+    {
         var old = _doc.Blocks;
         var sel = new HashSet<string>(_selected);
         var removed = new HashSet<string>(sel);
@@ -732,10 +757,8 @@ public partial class MainWindow
         _doc.Comments.RemoveAll(c => removed.Contains(c.BlockId));
         // Backspace goes to the row above, like in text; Delete to the row that took the removed row's place
         int at = Math.Clamp(preserveChildren ? first - 1 : first, 0, output.Count - 1);
-        var target = preserveChildren && first > 0 ? output[at].Id : focusChild ?? output[at].Id;
-        Commit();
-        RenderRows();
-        FocusRow(target);
+        target = preserveChildren && first > 0 ? output[at].Id : focusChild ?? output[at].Id;
+        return first;
     }
 
     void ClearSelectedText()
@@ -959,6 +982,14 @@ public partial class MainWindow
     void PasteInto(RowView v, IDataObject? data, bool plainOnly)
     {
         if (data == null) return;
+        if (!plainOnly && ReadRows(data) is { } clip)
+        {
+            var (rows, comments) = clip;
+            int min = rows.Min(b => b.Level);
+            foreach (var r in rows) r.Level = Math.Min(20, v.B.Level + r.Level - min);
+            InsertPasted(v, rows, comments);
+            return;
+        }
         string plain = "";
         var items = new List<Html.Item>();
         try
@@ -989,7 +1020,13 @@ public partial class MainWindow
 
     /// <summary>Several pasted rows never replace the row's text: they go below it (split at the caret), or above it
     /// when the caret is at the start. An empty row is replaced.</summary>
-    void PasteRows(RowView v, List<Html.Item> items, bool plainOnly)
+    void PasteRows(RowView v, List<Html.Item> items, bool plainOnly) =>
+        InsertPasted(v, items.Select(x => new Block
+        {
+            Level = Math.Min(20, v.B.Level + x.Level), Type = plainOnly && x.Type == "none" ? v.B.Type : x.Type, Runs = TextRun.Merge(x.Runs),
+        }).ToList(), null);
+
+    void InsertPasted(RowView v, List<Block> created, List<Comment>? comments)
     {
         Mark();
         var box = v.Box;
@@ -998,11 +1035,9 @@ public partial class MainWindow
         b.Runs = ReadBox(v);
         var (before, after) = TextRun.Split(b.Runs, CharOffset(box.Document, box.CaretPosition));
         int i = Index(b.Id);
-        var created = items.Select(x => new Block
-        {
-            Level = Math.Min(20, b.Level + x.Level), Type = plainOnly && x.Type == "none" ? b.Type : x.Type, Runs = TextRun.Merge(x.Runs),
-        }).ToList();
         int pasted = created.Count;
+        var pastedRows = created.ToList();
+        if (comments != null) _doc.Comments.AddRange(comments);
         bool hasBefore = before.Any(r => r.Text.Trim().Length > 0), hasAfter = after.Any(r => r.Text.Trim().Length > 0);
         if (!hasBefore && !hasAfter)
         {
@@ -1023,8 +1058,9 @@ public partial class MainWindow
         foreach (var c in created.Take(pasted)) _selected.Add(c.Id);
         Commit();
         RenderRows();
+        if (comments is { Count: > 0 }) RenderReview();
         FocusRow(created[pasted - 1].Id, Caret.End, true);
-        Toast($"{pasted} rows pasted");
+        ShowPasteNote(pastedRows);
     }
 
     // ---------- find (Ctrl+F) ----------
